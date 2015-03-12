@@ -22,7 +22,7 @@ fi
 #   * apt-get update
 #   * apt-get install deps
 #
-flocker-base-install-zfs-deps() {
+flocker-base-install-deps() {
   apt-get update
   apt-get -y install \
     build-essential \
@@ -69,25 +69,6 @@ flocker-base-install-zfs() {
   sudo dpkg -i *.deb
 }
 
-# install docker
-flocker-base-install-docker() {
-  echo "Installing docker"
-  apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 36A1D7869245C8950F966E92D8576A8BA88D21E9
-  echo deb https://get.docker.io/ubuntu docker main > /etc/apt/sources.list.d/docker.list
-  apt-get update
-  apt-get -y install lxc-docker
-}
-
-flocker-base-install-flocker-control() { 
-  echo "Install flocker-control"
-  docker pull lmarsden/flocker-control
-}
-
-flocker-base-install-flocker-zfs-agent() { 
-  echo "Install flocker-zfs-agent"
-  docker pull lmarsden/flocker-zfs-agent
-}
-
 # system config for flocker
 flocker-base-install-sysconfig() {
   # make the kernel not panic
@@ -97,22 +78,21 @@ flocker-base-install-sysconfig() {
 # setup the ZFS pool once zfs has been installed
 flocker-base-install-setup-zfs-pool() {
   if [[ -b /dev/xvdb ]]; then
-      echo "Detected EBS environment, setting up real zpool..."
-      umount /mnt # this is where xvdb is mounted by default
-      zpool create $ZFS_POOL_NAME /dev/xvdb
+    echo "Detected EBS environment, setting up real zpool..."
+    umount /mnt # this is where xvdb is mounted by default
+    zpool create $ZFS_POOL_NAME /dev/xvdb
   elif [[ ! -b /dev/sdb ]]; then
-      echo "Setting up a toy zpool..."
-      truncate -s 10G /$ZFS_POOL_NAME-datafile
-      zpool create $ZFS_POOL_NAME /$ZFS_POOL_NAME-datafile
+    echo "Setting up a toy zpool..."
+    truncate -s 10G /$ZFS_POOL_NAME-datafile
+    zpool create $ZFS_POOL_NAME /$ZFS_POOL_NAME-datafile
   fi
 }
 
 # walk through each stage to do a complete flocker install
 flocker-base-install() {
-  flocker-base-install-zfs-deps
+  flocker-base-install-deps
   flocker-base-install-spl
   flocker-base-install-zfs
-  flocker-base-install-docker
   flocker-base-install-sysconfig
   flocker-base-install-setup-zfs-pool
 }
