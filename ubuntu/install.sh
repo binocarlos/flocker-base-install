@@ -8,6 +8,8 @@ export SPL_COMMIT=${SPL_COMMIT:=47af4b76ffe72457166e4abfcfe23848ac51811a}
 export ZFS_REPO=${ZFS_REPO:=https://github.com/zfsonlinux/zfs}
 export ZFS_COMMIT=${ZFS_COMMIT:=d958324f97f4668a2a6e4a6ce3e5ca09b71b31d9}
 
+export ZFS_POOL_NAME=${ZFS_POOL_NAME:=flocker}
+
 # Make sure only root can run our script
 if [ "$(id -u)" != "0" ]; then
    echo "This script must be run as root" 1>&2
@@ -53,7 +55,7 @@ flocker-base-install-spl() {
   sudo dpkg -i *.deb
 }
 
-# Compile and install spl
+# Compile and install zfs
 flocker-base-install-zfs() {
   echo "Installing ZFS - $ZFS_REPO - $ZFS_COMMIT"
   cd ~/
@@ -76,19 +78,33 @@ flocker-base-install-docker() {
   apt-get -y install lxc-docker
 }
 
-# clone and install flocker - not needed when containerized
 flocker-base-install-flocker-control() { 
-  echo "Run container flocker-control"
+  echo "Install flocker-control"
+  docker pull lmarsden/flocker-control
 }
 
 flocker-base-install-flocker-zfs-agent() { 
-  echo "Run container flocker-zfs-agent"
+  echo "Install flocker-zfs-agent"
+  docker pull lmarsden/flocker-zfs-agent
 }
 
 # system config for flocker
 flocker-base-install-sysconfig() {
   # make the kernel not panic
   sed -i'backup' s/USE_KDUMP=0/USE_KDUMP=1/g /etc/default/kdump-tools
+}
+
+# setup the ZFS pool once zfs has been installed
+flocker-base-install-setup-zfs-pool() {
+  if [[ -b /dev/xvdb ]]; then
+      echo "Detected EBS environment, setting up real zpool..."
+      umount /mnt # this is where xvdb is mounted by default
+      zpool create $ZFS_POOL_NAME /dev/xvdb
+  elif [[ ! -b /dev/sdb ]]; then
+      echo "Setting up a toy zpool..."
+      truncate -s 10G /$ZFS_POOL_NAME-datafile
+      zpool create $ZFS_POOL_NAME /$ZFS_POOL_NAME-datafile
+  fi
 }
 
 # walk through each stage to do a complete flocker install
@@ -98,4 +114,5 @@ flocker-base-install() {
   flocker-base-install-zfs
   flocker-base-install-docker
   flocker-base-install-sysconfig
+  flocker-base-install-setup-zfs-pool
 }
