@@ -2,6 +2,11 @@
 
 export DEBIAN_FRONTEND=noninteractive
 
+export FLOCKER_COMMIT=${FLOCKER_COMMIT:=bcc7bb4280629a67b97da7750ca6e513767aad21}
+export FLOCKER_REPO=${FLOCKER_REPO:=https://github.com/clusterhq/flocker}
+
+export MACHINIST_VERSION=${MACHINIST_VERSION:=0.2.0}
+
 export SPL_REPO=${SPL_REPO:=https://github.com/zfsonlinux/spl}
 export SPL_COMMIT=${SPL_COMMIT:=47af4b76ffe72457166e4abfcfe23848ac51811a}
 
@@ -86,6 +91,28 @@ flocker-base-install-setup-zfs-pool() {
     truncate -s 10G /$ZFS_POOL_NAME-datafile
     zpool create $ZFS_POOL_NAME /$ZFS_POOL_NAME-datafile
   fi
+}
+
+## THESE ARE ONLY FOR INSTALLING FLOCKER ON THE HOST
+
+# download and install machinist - not needed when containerized
+flocker-base-install-machinist() {
+  echo "Installing Machinist - $MACHINIST_VERSION"
+  cd ~/
+  wget https://pypi.python.org/packages/source/m/machinist/machinist-$MACHINIST_VERSION.tar.gz
+  tar zxfv machinist-$MACHINIST_VERSION.tar.gz
+  cd machinist-$MACHINIST_VERSION
+  python setup.py install
+}
+
+# clone and install flocker - not needed when containerized
+flocker-base-install-flocker() { 
+  echo "Installing Flocker - $FLOCKER_REPO - $FLOCKER_COMMIT"
+  cd /opt
+  git clone $FLOCKER_REPO
+  cd flocker
+  git checkout $FLOCKER_COMMIT
+  python setup.py install
 }
 
 # walk through each stage to do a complete flocker install
