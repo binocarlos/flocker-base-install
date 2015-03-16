@@ -49,7 +49,7 @@ flocker-base-install-deps() {
 # Compile and install spl
 flocker-base-install-spl() {
   echo "Installing SPL - $SPL_REPO - $SPL_COMMIT"
-  cd ~/
+  cd /srv
   git clone $SPL_REPO
   cd spl
   git checkout $SPL_COMMIT
@@ -63,7 +63,7 @@ flocker-base-install-spl() {
 # Compile and install zfs
 flocker-base-install-zfs() {
   echo "Installing ZFS - $ZFS_REPO - $ZFS_COMMIT"
-  cd ~/
+  cd /srv
   git clone $ZFS_REPO
   cd zfs
   git checkout $ZFS_COMMIT
@@ -98,7 +98,7 @@ flocker-base-install-setup-zfs-pool() {
 # download and install machinist - not needed when containerized
 flocker-base-install-machinist() {
   echo "Installing Machinist - $MACHINIST_VERSION"
-  cd ~/
+  cd /srv
   wget https://pypi.python.org/packages/source/m/machinist/machinist-$MACHINIST_VERSION.tar.gz
   tar zxfv machinist-$MACHINIST_VERSION.tar.gz
   cd machinist-$MACHINIST_VERSION
